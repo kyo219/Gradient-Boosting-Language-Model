@@ -1,0 +1,12 @@
+{
+  "train_accuracy": 0.1,
+  "valid_accuracy": 0.1,
+  "train_logloss": 8.0,
+  "valid_logloss": 8.0,
+  "train_perplexity": 3000.0,
+  "valid_perplexity": 3000.0,
+  "best_iteration": 2,
+  "num_classes": 3004,
+  "context_length": 16,
+  "note": "This is a minimal test model for pipeline testing only"
+}

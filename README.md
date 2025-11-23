@@ -18,15 +18,24 @@
 │   ├── vocab.py            # 語彙構築
 │   ├── tokenizer.py        # トークナイザ
 │   └── dataset.py          # データセット生成
+├── gblm_model/             # モデル学習・推論モジュール
+│   ├── __init__.py
+│   ├── config.py           # モデル設定
+│   ├── metrics.py          # 評価指標
+│   ├── train.py            # 学習パイプライン
+│   └── inference.py        # 推論・テキスト生成
 ├── scripts/
 │   ├── build_vocab.py      # 語彙構築スクリプト
-│   └── make_dataset.py     # データセット生成スクリプト
+│   ├── make_dataset.py     # データセット生成スクリプト
+│   ├── train_gblm.py       # モデル学習スクリプト
+│   └── sample_gblm.py      # テキスト生成スクリプト
 ├── artifacts/              # 生成ファイル保存先
 │   ├── vocab.json          # 語彙リスト
 │   ├── tokenizer.json      # トークナイザ
 │   ├── gblm_data.npz       # 学習データ
 │   ├── train.npz           # 訓練データ
-│   └── val.npz             # 検証データ
+│   ├── val.npz             # 検証データ
+│   └── gblm_model.txt      # 学習済みモデル
 └── cleaned_merged_fairy_tales_without_eos.txt  # サンプルコーパス
 ```
 
@@ -47,9 +56,9 @@ source .venv/bin/activate  # Linux/Mac
 uv pip install pandas numpy
 ```
 
-LightGBMで学習する場合は追加で：
+LightGBMとscikit-learnも必要です：
 ```bash
-uv pip install lightgbm
+uv pip install lightgbm scikit-learn
 ```
 
 ## 使用方法
@@ -100,6 +109,46 @@ python scripts/make_dataset.py \
 - `--shuffle`: サンプルをシャッフル（デフォルト: True）
 - `--seed`: 乱数シード（デフォルト: 42）
 
+### 3. モデルの学習
+
+LightGBMを使用してGBLMモデルを学習します。
+
+```bash
+python scripts/train_gblm.py \
+    --num-boost-round 500 \
+    --early-stopping-rounds 20 \
+    --learning-rate 0.05 \
+    --num-leaves 64
+```
+
+**主要パラメータ:**
+- `--num-boost-round`: ブースティングラウンド数（デフォルト: 500）
+- `--early-stopping-rounds`: 早期停止ラウンド数（デフォルト: 20）
+- `--learning-rate`: 学習率（デフォルト: 0.1）
+- `--num-leaves`: 決定木の葉の数（デフォルト: 64）
+- `--min-data-in-leaf`: 葉の最小データ数（デフォルト: 20）
+
+### 4. テキスト生成
+
+学習済みモデルを使用してテキストを生成します。
+
+```bash
+python scripts/sample_gblm.py \
+    --prompt "Once upon a time" \
+    --max-new-tokens 100 \
+    --sampling top_k \
+    --top-k 10 \
+    --temperature 0.8
+```
+
+**パラメータ:**
+- `--prompt`: 生成開始テキスト
+- `--max-new-tokens`: 生成する最大トークン数
+- `--sampling`: サンプリング方法（greedy, top_k, top_p, temperature）
+- `--top-k`: top-kサンプリングのk値
+- `--top-p`: top-pサンプリングのp値
+- `--temperature`: 温度パラメータ（低いほど決定的）
+
 ## データセット形式
 
 生成されるデータセットは以下の形式です：
@@ -110,31 +159,57 @@ python scripts/make_dataset.py \
   - 各行は過去LトークンのトークンID
 - **y**: shape=(N,)の次トークンID配列
 
-## LightGBMでの学習例
+## Pythonでの使用例
+
+### 学習
 
 ```python
-import numpy as np
-import lightgbm as lgb
-from gblm_data.dataset import load_dataset, to_lgb_dataset
+from gblm_model.config import GBLMTrainConfig, PathsConfig, TrainSplitConfig, LightGBMConfig
+from gblm_model.train import train_gblm
+from pathlib import Path
 
-# データセットの読み込み
-X, y = load_dataset('artifacts')
+# 設定
+cfg = GBLMTrainConfig(
+    paths=PathsConfig(artifacts_dir=Path("artifacts")),
+    split=TrainSplitConfig(valid_size=0.1, shuffle=True),
+    lgbm=LightGBMConfig(
+        learning_rate=0.05,
+        num_leaves=64,
+        num_boost_round=500,
+        early_stopping_rounds=20
+    )
+)
 
-# LightGBM用データセットに変換
-dtrain = to_lgb_dataset(X, y)
+# 学習実行
+booster, metrics = train_gblm(cfg)
+print(f"Valid accuracy: {metrics['valid_accuracy']:.4f}")
+print(f"Valid perplexity: {metrics['valid_perplexity']:.2f}")
+```
 
-# モデルの学習
-params = {
-    'objective': 'multiclass',
-    'num_class': 3004,  # 語彙サイズ
-    'metric': 'multi_logloss',
-    'boosting_type': 'gbdt',
-    'num_leaves': 31,
-    'learning_rate': 0.05,
-    'feature_fraction': 0.9
-}
+### テキスト生成
 
-model = lgb.train(params, dtrain, num_boost_round=100)
+```python
+from gblm_model.inference import load_booster, generate_text
+from gblm_model.train import load_tokenizer
+from pathlib import Path
+
+# モデルとトークナイザの読み込み
+artifacts_dir = Path("artifacts")
+tokenizer = load_tokenizer(artifacts_dir / "tokenizer.json")
+booster = load_booster(artifacts_dir / "gblm_model.txt")
+
+# テキスト生成
+text = generate_text(
+    booster=booster,
+    tokenizer=tokenizer,
+    prompt="Once upon a time",
+    context_length=16,
+    max_new_tokens=100,
+    sampling="top_k",
+    top_k=10,
+    temperature=0.8
+)
+print(text)
 ```
 
 ## カスタムコーパスの使用
@@ -190,6 +265,8 @@ python scripts/build_vocab.py --config config.json
 - `tokenizer.json`: トークナイザの設定と語彙マッピング
 - `gblm_data.npz`: 全データセット
 - `train.npz`, `val.npz`: 訓練/検証分割データ
+- `gblm_model.txt`: 学習済みLightGBMモデル
+- `gblm_train_metrics.json`: 学習時の評価指標
 - `*_metadata.json`: 各データセットのメタ情報
 - `build_stats.json`, `dataset_stats.json`: 統計情報
 
