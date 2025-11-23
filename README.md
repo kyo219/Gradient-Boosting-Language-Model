@@ -44,8 +44,13 @@
 ├── docs/                       # ドキュメント
 │   ├── gblm_gb_language_model_design.md
 │   └── gblm_lightgbm_model_and_pipeline_design.md
+├── tests/                      # テストコード
+│   ├── test_gblm_data.py      # データ処理モジュールのテスト
+│   ├── test_gblm_model.py     # モデル学習・推論のテスト
+│   └── test_scripts.py        # スクリプトのインポートテスト
 ├── experiments/                # 実験用ディレクトリ
 ├── pyproject.toml             # プロジェクト設定
+├── pytest.ini                 # pytestの設定
 └── README.md                  # このファイル
 ```
 
@@ -69,6 +74,11 @@ uv pip install pandas numpy
 LightGBMとscikit-learnも必要です：
 ```bash
 uv pip install lightgbm scikit-learn
+```
+
+テスト用にpytestも必要です：
+```bash
+uv pip install pytest
 ```
 
 ## 使用方法
@@ -280,6 +290,47 @@ python scripts/build_vocab.py --config config.json
 - `*_metadata.json`: 各データセットのメタ情報
 - `build_stats.json`, `dataset_stats.json`: 統計情報
 
+## テスト
+
+### テストの実行
+
+全てのテストを実行：
+```bash
+pytest
+```
+
+特定のモジュールのテストを実行：
+```bash
+pytest tests/test_gblm_data.py  # データ処理のテスト
+pytest tests/test_gblm_model.py  # モデルのテスト
+pytest tests/test_scripts.py     # スクリプトのテスト
+```
+
+詳細な出力を表示：
+```bash
+pytest -v
+```
+
+### テストの内容
+
+- **test_gblm_data.py**: データ処理モジュールの単体テスト
+  - コーパス読み込み
+  - 語彙構築
+  - トークナイゼーション
+  - データセット生成
+  - 設定管理
+
+- **test_gblm_model.py**: モデル学習・推論の単体テスト
+  - 設定クラス
+  - 評価指標計算
+  - 最小データでの学習
+  - テキスト生成
+  - 完全パイプラインテスト
+
+- **test_scripts.py**: CLIスクリプトのインポートテスト
+  - 全スクリプトがインポート可能か確認
+  - スクリプトの構造チェック
+
 ## トラブルシューティング
 
 ### メモリ不足の場合
@@ -292,6 +343,12 @@ python scripts/build_vocab.py --config config.json
 
 - `--min-freq`を下げる
 - `--top-k`を増やす
+
+### テストが失敗する場合
+
+- 依存パッケージが全てインストールされているか確認
+- Python 3.8以上を使用しているか確認
+- `PYTHONPATH`にプロジェクトルートが含まれているか確認
 
 ## ライセンス
 
