@@ -1,0 +1,43 @@
+{
+  "corpus_file": "cleaned_merged_fairy_tales_without_eos.txt",
+  "n_documents": 1329,
+  "vocab_size": 3000,
+  "special_tokens": [
+    "<PAD>",
+    "<UNK>",
+    "<BOS>",
+    "<EOS>"
+  ],
+  "total_tokens": 3834897,
+  "unique_tokens_before_filtering": 47260,
+  "min_freq": 3,
+  "top_k": 3000,
+  "oov_stats": {
+    "total_tokens": 258801,
+    "oov_tokens": 19838,
+    "oov_rate": 7.665349051974296,
+    "oov_types": 7327,
+    "sample_oov_words": [
+      "cloudless",
+      "corpses",
+      "hideous",
+      "windowpanes",
+      "wearies",
+      "insist",
+      "rub",
+      "breeches",
+      "gooseberry",
+      "cricket",
+      "skyblue",
+      "charities",
+      "plot",
+      "pulcinella",
+      "lesser",
+      "ogrish",
+      "veil",
+      "honestly",
+      "frederickshafen",
+      "stitch"
+    ]
+  }
+}

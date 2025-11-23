@@ -1,0 +1,14 @@
+{
+  "n_samples": 90000,
+  "context_length": 16,
+  "n_unique_targets": 2937,
+  "X_shape": [
+    90000,
+    16
+  ],
+  "y_shape": [
+    90000
+  ],
+  "X_dtype": "int32",
+  "y_dtype": "int32"
+}

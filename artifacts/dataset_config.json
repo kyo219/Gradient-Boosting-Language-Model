@@ -1,0 +1,20 @@
+{
+  "vocab": {
+    "min_freq": 5,
+    "top_k": 5000,
+    "lowercase": true,
+    "max_docs": null
+  },
+  "dataset": {
+    "context_length": 16,
+    "max_samples": 100000,
+    "shuffle": true,
+    "random_seed": 42
+  },
+  "paths": {
+    "corpus_file": "cleaned_merged_fairy_tales_without_eos.txt",
+    "text_column": null,
+    "artifacts_dir": "artifacts",
+    "is_csv": false
+  }
+}

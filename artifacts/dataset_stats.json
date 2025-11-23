@@ -1,0 +1,86 @@
+{
+  "n_samples": 100000,
+  "context_length": 16,
+  "vocab_size": 3004,
+  "n_unique_contexts": 99922,
+  "n_unique_targets": 2954,
+  "top_targets": [
+    {
+      "token": "<UNK>",
+      "count": 10840,
+      "frequency": 0.1084
+    },
+    {
+      "token": "the",
+      "count": 6039,
+      "frequency": 0.06039
+    },
+    {
+      "token": "and",
+      "count": 3889,
+      "frequency": 0.03889
+    },
+    {
+      "token": "to",
+      "count": 2635,
+      "frequency": 0.02635
+    },
+    {
+      "token": "a",
+      "count": 2199,
+      "frequency": 0.02199
+    },
+    {
+      "token": "of",
+      "count": 2148,
+      "frequency": 0.02148
+    },
+    {
+      "token": "he",
+      "count": 1581,
+      "frequency": 0.01581
+    },
+    {
+      "token": "in",
+      "count": 1442,
+      "frequency": 0.01442
+    },
+    {
+      "token": "was",
+      "count": 1379,
+      "frequency": 0.01379
+    },
+    {
+      "token": "i",
+      "count": 1356,
+      "frequency": 0.01356
+    }
+  ],
+  "padding_ratio": 0.002508125,
+  "unk_ratio_X": 0.108775625,
+  "unk_ratio_y": 0.1084,
+  "corpus_file": "cleaned_merged_fairy_tales_without_eos.txt",
+  "tokenizer_file": "artifacts/tokenizer.json",
+  "n_documents": 1329,
+  "generation_time_seconds": 4.735872983932495,
+  "config": {
+    "vocab": {
+      "min_freq": 5,
+      "top_k": 5000,
+      "lowercase": true,
+      "max_docs": null
+    },
+    "dataset": {
+      "context_length": 16,
+      "max_samples": 100000,
+      "shuffle": true,
+      "random_seed": 42
+    },
+    "paths": {
+      "corpus_file": "cleaned_merged_fairy_tales_without_eos.txt",
+      "text_column": null,
+      "artifacts_dir": "artifacts",
+      "is_csv": false
+    }
+  }
+}
