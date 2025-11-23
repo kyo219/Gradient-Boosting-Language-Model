@@ -18,6 +18,11 @@ from src.gblm_model.metrics import (
     compute_multi_logloss,
     compute_perplexity,
 )
+from src.gblm_model.features import (
+    FeatureConfig,
+    build_features_for_lightgbm,
+    load_embedding_matrix,
+)
 
 
 def load_tokenizer(tokenizer_path: Path) -> Tokenizer:
@@ -53,6 +58,7 @@ def load_gblm_data(data_path: Path) -> Tuple[np.ndarray, np.ndarray]:
 
 def train_gblm(
     cfg: GBLMTrainConfig,
+    feature_cfg: Optional[FeatureConfig] = None,
     verbose: bool = True,
 ) -> Tuple[lgb.Booster, Dict[str, Any]]:
     """
@@ -60,6 +66,7 @@ def train_gblm(
 
     Args:
         cfg: Training configuration.
+        feature_cfg: Optional feature engineering configuration.
         verbose: Whether to print training progress.
 
     Returns:
@@ -86,7 +93,41 @@ def train_gblm(
         print(f"Data shape: X={X.shape}, y={y.shape}")
         print(f"Number of classes (vocabulary size): {num_classes}")
 
-    # 3. Train/valid split
+    # 3. Apply feature engineering if configured
+    embedding_matrix = None
+    categorical_features = None
+
+    if feature_cfg is not None:
+        if verbose:
+            print(f"\nApplying feature engineering...")
+
+        # Load embeddings if needed
+        if feature_cfg.use_embeddings and feature_cfg.embedding_path:
+            if verbose:
+                print(f"Loading embedding matrix from {feature_cfg.embedding_path}...")
+            embedding_matrix = load_embedding_matrix(
+                feature_cfg.embedding_path,
+                tokenizer
+            )
+            if verbose:
+                print(f"Loaded embeddings: shape={embedding_matrix.shape}")
+
+        # Transform features
+        X, categorical_features = build_features_for_lightgbm(
+            X,
+            tokenizer,
+            feature_cfg,
+            embedding_matrix
+        )
+        if verbose:
+            print(f"Features after engineering: shape={X.shape}")
+            print(f"Categorical feature indices: {categorical_features}")
+    else:
+        # Default: all features are categorical (token IDs)
+        n_features = X.shape[1]
+        categorical_features = list(range(n_features))
+
+    # 4. Train/valid split
     if verbose:
         print(f"\nSplitting data with validation size={cfg.split.valid_size}")
 
@@ -115,12 +156,9 @@ def train_gblm(
     if verbose:
         print(f"Train size: {X_train.shape[0]}, Valid size: {X_valid.shape[0]}")
 
-    # 4. Create LightGBM Datasets
-    n_features = X.shape[1]
-    categorical_features = list(range(n_features))  # All features are categorical (token IDs)
-
+    # 5. Create LightGBM Datasets
     if verbose:
-        print(f"\nCreating LightGBM datasets with {n_features} categorical features...")
+        print(f"\nCreating LightGBM datasets with {len(categorical_features)} categorical features...")
 
     dtrain = lgb.Dataset(
         X_train,
@@ -136,14 +174,14 @@ def train_gblm(
         free_raw_data=False,
     )
 
-    # 5. Build parameters
+    # 6. Build parameters
     params = cfg.lgbm.to_lgbm_params(num_class=num_classes)
 
     if verbose:
         print(f"\nStarting training with num_boost_round={cfg.lgbm.num_boost_round}")
         print(f"Early stopping rounds: {cfg.lgbm.early_stopping_rounds}")
 
-    # 6. Train with early stopping
+    # 7. Train with early stopping
     callbacks = []
 
     if verbose:
@@ -163,7 +201,7 @@ def train_gblm(
         callbacks=callbacks,
     )
 
-    # 7. Compute predictions and metrics
+    # 8. Compute predictions and metrics
     if verbose:
         print("\nComputing final metrics...")
 
@@ -186,14 +224,16 @@ def train_gblm(
         "num_classes": num_classes,
         "train_size": int(X_train.shape[0]),
         "valid_size": int(X_valid.shape[0]),
-        "context_length": int(X_train.shape[1]),
+        "num_features": int(X_train.shape[1]),
+        "num_categorical_features": len(categorical_features),
         "config": {
             "train_split": asdict(cfg.split),
             "lgbm": asdict(cfg.lgbm),
+            "features": asdict(feature_cfg) if feature_cfg else None,
         },
     }
 
-    # 8. Save model
+    # 9. Save model
     artifacts_dir.mkdir(parents=True, exist_ok=True)
     booster.save_model(str(model_path))
     if verbose:
@@ -205,5 +245,13 @@ def train_gblm(
         json.dump(metrics, f, indent=2, ensure_ascii=False)
     if verbose:
         print(f"Metrics saved to {metrics_path}")
+
+    # Save feature config if present
+    if feature_cfg is not None:
+        feature_cfg_path = artifacts_dir / "feature_config.json"
+        with open(feature_cfg_path, "w", encoding="utf-8") as f:
+            json.dump(asdict(feature_cfg), f, indent=2, ensure_ascii=False, default=str)
+        if verbose:
+            print(f"Feature config saved to {feature_cfg_path}")
 
     return booster, metrics

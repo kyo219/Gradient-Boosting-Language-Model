@@ -4,11 +4,17 @@ Inference and text generation utilities for GBLM.
 
 from pathlib import Path
 from typing import List, Literal, Optional
+import json
 import numpy as np
 import lightgbm as lgb
 
 from src.gblm_data.tokenizer import Tokenizer
 from src.gblm_model.train import load_tokenizer  # Reuse
+from src.gblm_model.features import (
+    FeatureConfig,
+    build_features_for_lightgbm,
+    load_embedding_matrix,
+)
 
 
 SamplingMethod = Literal["greedy", "top_k", "top_p", "temperature"]
@@ -26,6 +32,29 @@ def load_booster(model_path: Path) -> lgb.Booster:
     """
     booster = lgb.Booster(model_file=str(model_path))
     return booster
+
+
+def load_feature_config(config_path: Path) -> Optional[FeatureConfig]:
+    """
+    Load feature configuration from saved JSON file.
+
+    Args:
+        config_path: Path to the feature config JSON file.
+
+    Returns:
+        FeatureConfig instance or None if file doesn't exist.
+    """
+    if not config_path.exists():
+        return None
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Convert string paths back to Path objects
+    if data.get("embedding_path"):
+        data["embedding_path"] = Path(data["embedding_path"])
+
+    return FeatureConfig(**data)
 
 
 def prepare_context_ids(
@@ -60,6 +89,8 @@ def predict_next_token_proba(
     tokenizer: Tokenizer,
     token_ids: List[int],
     context_length: int,
+    feature_cfg: Optional[FeatureConfig] = None,
+    embedding_matrix: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """
     Predict next token probability distribution from current token_ids.
@@ -69,6 +100,8 @@ def predict_next_token_proba(
         tokenizer: Tokenizer instance.
         token_ids: Current token ID sequence.
         context_length: Context length.
+        feature_cfg: Optional feature configuration.
+        embedding_matrix: Optional pre-loaded embedding matrix.
 
     Returns:
         proba: shape (V,) ndarray. Probability for each token ID.
@@ -78,6 +111,15 @@ def predict_next_token_proba(
         context_length=context_length,
         pad_id=tokenizer.pad_id,
     )
+
+    # Apply feature engineering if configured
+    if feature_cfg is not None:
+        X, _ = build_features_for_lightgbm(
+            X,
+            tokenizer,
+            feature_cfg,
+            embedding_matrix
+        )
 
     # Get prediction
     best_iter = booster.best_iteration if booster.best_iteration else booster.current_iteration()
@@ -200,6 +242,8 @@ def generate_text(
     top_p: float = 0.9,
     temperature: float = 1.0,
     stop_at_eos: bool = True,
+    feature_cfg: Optional[FeatureConfig] = None,
+    embedding_matrix: Optional[np.ndarray] = None,
     verbose: bool = False,
 ) -> str:
     """
@@ -216,6 +260,8 @@ def generate_text(
         top_p: p value for top-p sampling.
         temperature: Temperature for softmax.
         stop_at_eos: Stop generation at EOS token.
+        feature_cfg: Optional feature configuration.
+        embedding_matrix: Optional pre-loaded embedding matrix.
         verbose: Print generation progress.
 
     Returns:
@@ -236,6 +282,8 @@ def generate_text(
             tokenizer=tokenizer,
             token_ids=token_ids,
             context_length=context_length,
+            feature_cfg=feature_cfg,
+            embedding_matrix=embedding_matrix,
         )
 
         # Sample next token
