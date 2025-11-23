@@ -1,0 +1,11 @@
+{
+  "coverage_percent": 80.0,
+  "vocabulary_size": 1039,
+  "min_frequency": 345,
+  "special_tokens": [
+    "<PAD>",
+    "<UNK>",
+    "<BOS>",
+    "<EOS>"
+  ]
+}
