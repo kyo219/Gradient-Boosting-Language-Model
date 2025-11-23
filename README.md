@@ -11,32 +11,42 @@
 
 ```
 .
-├── gblm_data/              # データ処理モジュール
-│   ├── __init__.py
-│   ├── config.py           # 設定管理
-│   ├── corpus.py           # コーパス読み込み
-│   ├── vocab.py            # 語彙構築
-│   ├── tokenizer.py        # トークナイザ
-│   └── dataset.py          # データセット生成
-├── gblm_model/             # モデル学習・推論モジュール
-│   ├── __init__.py
-│   ├── config.py           # モデル設定
-│   ├── metrics.py          # 評価指標
-│   ├── train.py            # 学習パイプライン
-│   └── inference.py        # 推論・テキスト生成
-├── scripts/
-│   ├── build_vocab.py      # 語彙構築スクリプト
-│   ├── make_dataset.py     # データセット生成スクリプト
-│   ├── train_gblm.py       # モデル学習スクリプト
-│   └── sample_gblm.py      # テキスト生成スクリプト
-├── artifacts/              # 生成ファイル保存先
-│   ├── vocab.json          # 語彙リスト
-│   ├── tokenizer.json      # トークナイザ
-│   ├── gblm_data.npz       # 学習データ
-│   ├── train.npz           # 訓練データ
-│   ├── val.npz             # 検証データ
-│   └── gblm_model.txt      # 学習済みモデル
-└── cleaned_merged_fairy_tales_without_eos.txt  # サンプルコーパス
+├── src/                        # ソースコード
+│   ├── gblm_data/             # データ処理モジュール
+│   │   ├── __init__.py
+│   │   ├── config.py          # 設定管理
+│   │   ├── corpus.py          # コーパス読み込み
+│   │   ├── vocab.py           # 語彙構築
+│   │   ├── tokenizer.py       # トークナイザ
+│   │   └── dataset.py         # データセット生成
+│   └── gblm_model/            # モデル学習・推論モジュール
+│       ├── __init__.py
+│       ├── config.py          # モデル設定
+│       ├── metrics.py         # 評価指標
+│       ├── train.py           # 学習パイプライン
+│       └── inference.py       # 推論・テキスト生成
+├── scripts/                    # 実行スクリプト
+│   ├── build_vocab.py         # 語彙構築
+│   ├── make_dataset.py        # データセット生成
+│   ├── train_gblm.py          # モデル学習
+│   ├── sample_gblm.py         # テキスト生成
+│   └── analyze_vocab_coverage.py  # カバレッジ分析
+├── data/                       # データファイル
+│   └── cleaned_merged_fairy_tales_without_eos.txt
+├── artifacts/                  # 生成ファイル
+│   ├── vocab.json             # 語彙（頻度ベース）
+│   ├── vocab_coverage80.json  # 語彙（80%カバレッジ）
+│   ├── tokenizer.json         # トークナイザ
+│   ├── gblm_data.npz          # 学習データ
+│   ├── train.npz              # 訓練データ
+│   ├── val.npz                # 検証データ
+│   └── gblm_model.txt         # 学習済みモデル
+├── docs/                       # ドキュメント
+│   ├── gblm_gb_language_model_design.md
+│   └── gblm_lightgbm_model_and_pipeline_design.md
+├── experiments/                # 実験用ディレクトリ
+├── pyproject.toml             # プロジェクト設定
+└── README.md                  # このファイル
 ```
 
 ## セットアップ
@@ -69,7 +79,7 @@ uv pip install lightgbm scikit-learn
 
 ```bash
 python scripts/build_vocab.py \
-    --corpus cleaned_merged_fairy_tales_without_eos.txt \
+    --corpus data/cleaned_merged_fairy_tales_without_eos.txt \
     --output-dir artifacts \
     --min-freq 3 \
     --top-k 3000 \
@@ -90,7 +100,7 @@ python scripts/build_vocab.py \
 
 ```bash
 python scripts/make_dataset.py \
-    --corpus cleaned_merged_fairy_tales_without_eos.txt \
+    --corpus data/cleaned_merged_fairy_tales_without_eos.txt \
     --tokenizer artifacts/tokenizer.json \
     --output-dir artifacts \
     --context-length 16 \
@@ -164,8 +174,8 @@ python scripts/sample_gblm.py \
 ### 学習
 
 ```python
-from gblm_model.config import GBLMTrainConfig, PathsConfig, TrainSplitConfig, LightGBMConfig
-from gblm_model.train import train_gblm
+from src.gblm_model.config import GBLMTrainConfig, PathsConfig, TrainSplitConfig, LightGBMConfig
+from src.gblm_model.train import train_gblm
 from pathlib import Path
 
 # 設定
@@ -189,8 +199,8 @@ print(f"Valid perplexity: {metrics['valid_perplexity']:.2f}")
 ### テキスト生成
 
 ```python
-from gblm_model.inference import load_booster, generate_text
-from gblm_model.train import load_tokenizer
+from src.gblm_model.inference import load_booster, generate_text
+from src.gblm_model.train import load_tokenizer
 from pathlib import Path
 
 # モデルとトークナイザの読み込み

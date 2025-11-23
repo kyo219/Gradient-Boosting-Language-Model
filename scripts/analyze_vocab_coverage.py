@@ -11,8 +11,8 @@ from typing import Tuple, List
 import sys
 sys.path.insert(0, '.')
 
-from gblm_data.corpus import load_corpus_texts
-from gblm_data.vocab import build_vocab, count_vocab
+from src.gblm_data.corpus import load_corpus_texts
+from src.gblm_data.vocab import build_vocab, count_vocab
 
 
 def analyze_coverage(frequencies: dict, coverage_percent: float = 95.0) -> Tuple[int, int, List[Tuple[str, int]]]:

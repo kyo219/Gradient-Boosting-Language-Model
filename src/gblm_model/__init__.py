@@ -5,13 +5,13 @@ This module provides tools for training and using Gradient Boosting Language Mod
 with LightGBM multiclass classification.
 """
 
-from gblm_model.config import (
+from src.gblm_model.config import (
     GBLMTrainConfig,
     LightGBMConfig,
     PathsConfig,
     TrainSplitConfig,
 )
-from gblm_model.metrics import (
+from src.gblm_model.metrics import (
     compute_accuracy,
     compute_multi_logloss,
     compute_perplexity,

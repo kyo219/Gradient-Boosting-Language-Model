@@ -11,9 +11,9 @@ import numpy as np
 import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 
-from gblm_model.config import GBLMTrainConfig
-from gblm_data.tokenizer import Tokenizer
-from gblm_model.metrics import (
+from src.gblm_model.config import GBLMTrainConfig
+from src.gblm_data.tokenizer import Tokenizer
+from src.gblm_model.metrics import (
     compute_accuracy,
     compute_multi_logloss,
     compute_perplexity,

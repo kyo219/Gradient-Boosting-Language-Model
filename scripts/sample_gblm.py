@@ -10,13 +10,13 @@ from pathlib import Path
 import argparse
 import json
 
-from gblm_model.config import PathsConfig
-from gblm_model.inference import (
+from src.gblm_model.config import PathsConfig
+from src.gblm_model.inference import (
     load_booster,
     generate_text,
     batch_generate,
 )
-from gblm_model.train import load_tokenizer
+from src.gblm_model.train import load_tokenizer
 
 
 def parse_args():

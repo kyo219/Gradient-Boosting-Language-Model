@@ -9,10 +9,10 @@ import json
 # Add parent directory to path to import gblm_data module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from gblm_data.config import GBLMConfig, create_default_config
-from gblm_data.corpus import load_corpus_texts
-from gblm_data.vocab import count_vocab, build_vocab, save_vocab, analyze_oov_rate
-from gblm_data.tokenizer import Tokenizer
+from src.gblm_data.config import GBLMConfig, create_default_config
+from src.gblm_data.corpus import load_corpus_texts
+from src.gblm_data.vocab import count_vocab, build_vocab, save_vocab, analyze_oov_rate
+from src.gblm_data.tokenizer import Tokenizer
 
 
 def main():

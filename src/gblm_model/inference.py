@@ -7,8 +7,8 @@ from typing import List, Literal, Optional
 import numpy as np
 import lightgbm as lgb
 
-from gblm_data.tokenizer import Tokenizer
-from gblm_model.train import load_tokenizer  # Reuse
+from src.gblm_data.tokenizer import Tokenizer
+from src.gblm_model.train import load_tokenizer  # Reuse
 
 
 SamplingMethod = Literal["greedy", "top_k", "top_p", "temperature"]

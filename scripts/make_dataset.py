@@ -10,10 +10,10 @@ import time
 # Add parent directory to path to import gblm_data module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from gblm_data.config import GBLMConfig
-from gblm_data.corpus import load_corpus_texts
-from gblm_data.tokenizer import Tokenizer
-from gblm_data.dataset import (
+from src.gblm_data.config import GBLMConfig
+from src.gblm_data.corpus import load_corpus_texts
+from src.gblm_data.tokenizer import Tokenizer
+from src.gblm_data.dataset import (
     make_gblm_training_data,
     save_dataset,
     create_train_val_split,
@@ -104,7 +104,7 @@ def main():
         cfg = GBLMConfig.from_json(args.config)
     else:
         print("Using command-line arguments for configuration")
-        from gblm_data.config import create_default_config
+        from src.gblm_data.config import create_default_config
         cfg = create_default_config(args.corpus)
 
         # Override with command-line arguments
@@ -224,7 +224,7 @@ def main():
     print("```python")
     print("import numpy as np")
     print("import lightgbm as lgb")
-    print("from gblm_data.dataset import load_dataset, to_lgb_dataset")
+    print("from src.gblm_data.dataset import load_dataset, to_lgb_dataset")
     print()
     print(f"# Load dataset")
     print(f"X, y = load_dataset('{cfg.paths.artifacts_dir}')")

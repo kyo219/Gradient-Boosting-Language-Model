@@ -10,13 +10,13 @@ from pathlib import Path
 import json
 import argparse
 
-from gblm_model.config import (
+from src.gblm_model.config import (
     GBLMTrainConfig,
     PathsConfig,
     TrainSplitConfig,
     LightGBMConfig,
 )
-from gblm_model.train import train_gblm
+from src.gblm_model.train import train_gblm
 
 
 def parse_args():
