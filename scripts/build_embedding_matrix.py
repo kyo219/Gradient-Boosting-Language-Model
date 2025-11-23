@@ -257,7 +257,9 @@ def main():
 
     # Load tokenizer
     logger.info(f"Loading tokenizer from {args.tokenizer_path}")
-    tokenizer = Tokenizer.from_file(args.tokenizer_path)
+    with open(args.tokenizer_path, 'r', encoding='utf-8') as f:
+        tokenizer_data = json.load(f)
+    tokenizer = Tokenizer.from_dict(tokenizer_data)
     logger.info(f"Tokenizer loaded: vocabulary size = {len(tokenizer.itos)}")
 
     # Get embedding file path
