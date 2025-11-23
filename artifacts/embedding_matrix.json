@@ -1,0 +1,9 @@
+{
+  "source": "glove",
+  "source_file": "data/embeddings/glove/glove.6B.50d.txt",
+  "embedding_dim": 50,
+  "vocab_size": 3004,
+  "unk_init": "random",
+  "tokenizer_path": "artifacts/tokenizer.json",
+  "n_embeddings_loaded": 400000
+}

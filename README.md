@@ -30,6 +30,7 @@
 │   ├── make_dataset.py        # データセット生成
 │   ├── train_gblm.py          # モデル学習
 │   ├── sample_gblm.py         # テキスト生成
+│   ├── chat_gblm.py           # インタラクティブチャット
 │   └── analyze_vocab_coverage.py  # カバレッジ分析
 ├── data/                       # データファイル
 │   └── cleaned_merged_fairy_tales_without_eos.txt
@@ -168,6 +169,56 @@ python scripts/sample_gblm.py \
 - `--top-k`: top-kサンプリングのk値
 - `--top-p`: top-pサンプリングのp値
 - `--temperature`: 温度パラメータ（低いほど決定的）
+
+### 5. インタラクティブチャットインターフェース
+
+学習済みモデルを使用してインタラクティブなチャットセッションを開始します。
+
+```bash
+python scripts/chat_gblm.py \
+    --context-length 16 \
+    --max-new-tokens 32 \
+    --sampling top_k \
+    --top-k 16 \
+    --temperature 1.0
+```
+
+**主要機能:**
+- **REPLループ**: ユーザーの入力を受け取り、モデルの応答を生成
+- **ローリングコンテキストウィンドウ**: 会話履歴を自動的に管理し、コンテキスト長を超えた場合は最新のトークンのみを保持
+- **会話管理**: `reset`コマンドで会話をリセット可能
+- **統計表示**: `--show-stats`フラグで会話統計を表示
+
+**使用例:**
+```bash
+# 基本的な使用
+python scripts/chat_gblm.py
+
+# 統計情報付きで実行
+python scripts/chat_gblm.py --show-stats
+
+# カスタム設定で実行
+python scripts/chat_gblm.py \
+    --context-length 16 \
+    --max-new-tokens 50 \
+    --sampling top_p \
+    --top-p 0.9 \
+    --temperature 0.8
+```
+
+**チャット内コマンド:**
+- `exit`, `quit`, `:q`: チャットセッションを終了
+- `reset`: 会話履歴をクリアして新しいセッションを開始
+- `Ctrl+C`または`Ctrl+D`: チャットを終了
+
+**パラメータ:**
+- `--context-length`: コンテキストウィンドウサイズ（トレーニング時と同じ値を使用、デフォルト: 16）
+- `--max-new-tokens`: 各ターンで生成する最大トークン数（デフォルト: 32）
+- `--sampling`: サンプリング方法（greedy, top_k, top_p）
+- `--top-k`: top-kサンプリングのk値（デフォルト: 16）
+- `--top-p`: top-pサンプリングのp値（デフォルト: 0.9）
+- `--temperature`: 温度パラメータ（デフォルト: 1.0）
+- `--show-stats`: 各ターン後に会話統計を表示
 
 ## データセット形式
 
