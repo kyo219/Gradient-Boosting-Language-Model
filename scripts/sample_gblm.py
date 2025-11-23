@@ -13,10 +13,13 @@ import json
 from src.gblm_model.config import PathsConfig
 from src.gblm_model.inference import (
     load_booster,
+    load_feature_config,
     generate_text,
     batch_generate,
 )
 from src.gblm_model.train import load_tokenizer
+from src.gblm_model.features import load_embedding_matrix
+import numpy as np
 
 
 def parse_args():
@@ -136,6 +139,8 @@ def main():
     artifacts_dir = paths.artifacts_dir
     tokenizer_path = artifacts_dir / paths.tokenizer_json
     model_path = artifacts_dir / paths.model_file
+    feature_config_path = artifacts_dir / "feature_config.json"
+    embedding_matrix_path = artifacts_dir / "embedding_matrix.npy"
 
     # Load model and tokenizer
     print(f"Loading tokenizer from {tokenizer_path}...")
@@ -145,6 +150,26 @@ def main():
     print(f"Loading model from {model_path}...")
     booster = load_booster(model_path)
     print("Model loaded successfully")
+
+    # Load feature configuration if available
+    feature_cfg = None
+    embedding_matrix = None
+
+    if feature_config_path.exists():
+        print(f"Loading feature configuration from {feature_config_path}...")
+        feature_cfg = load_feature_config(feature_config_path)
+        print(f"Feature engineering enabled:")
+        print(f"  - Token IDs: {feature_cfg.use_token_ids}")
+        print(f"  - Context statistics: {feature_cfg.add_context_length}")
+        print(f"  - Embeddings: {feature_cfg.use_embeddings}")
+
+        # Load embedding matrix if needed
+        if feature_cfg.use_embeddings and embedding_matrix_path.exists():
+            print(f"Loading embedding matrix from {embedding_matrix_path}...")
+            embedding_matrix = np.load(embedding_matrix_path)
+            print(f"  - Embedding matrix shape: {embedding_matrix.shape}")
+    else:
+        print("No feature configuration found, using raw token IDs only")
 
     # Prepare prompts
     prompts = []
@@ -165,6 +190,8 @@ def main():
         "temperature": args.temperature,
         "stop_at_eos": not args.no_stop_at_eos,
         "verbose": args.verbose,
+        "feature_cfg": feature_cfg,
+        "embedding_matrix": embedding_matrix,
     }
 
     print(f"\n=== Generation Settings ===")

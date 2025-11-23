@@ -1,0 +1,16 @@
+{
+  "use_token_ids": true,
+  "add_context_length": true,
+  "add_unk_count": true,
+  "add_type_token_ratio": true,
+  "use_embeddings": true,
+  "embedding_path": "artifacts/embedding_matrix.npy",
+  "add_mean_pooled_embedding": true,
+  "embedding_dim_reduction": null,
+  "add_prototype_similarities": true,
+  "n_prototypes": 50,
+  "add_last_token_similarities": false,
+  "top_k_similar": 10,
+  "add_position_weighted_embedding": false,
+  "add_max_pooled_embedding": false
+}
